@@ -1,42 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Multi-User Guessing Game — Home</title>
+  <meta charset="UTF-8">
+  <title>Multiuser Guess Game</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="page center-col">
-    <header class="hero card">
-      <h1>Multi-User Number Guessing Game</h1>
-      <p class="muted">Admin controls, multi-player lobby, per-player chances, and leaderboard. Open multiple tabs to simulate players.</p>
-      <div class="actions">
-        <a class="btn primary" href="admin.html" id="adminBtn">Admin Login</a>
-        <a class="btn ghost" href="game.html" id="joinBtn">Join Game</a>
-      </div>
-    </header>
-
-    <section class="features card grid-3">
-      <div>
-        <h3>Secure Lobby</h3>
-        <p class="muted">Admin generates a key — players must enter it to join.</p>
-      </div>
-      <div>
-        <h3>Per-player chances</h3>
-        <p class="muted">Admin configures chances; players get individual restarts if they exhaust attempts.</p>
-      </div>
-      <div>
-        <h3>Leaderboard</h3>
-        <p class="muted">Automatically tracks winners and attempts. Admin can reset.</p>
-      </div>
-    </section>
-
-    <footer class="muted">Tip: this demo uses browser features only (no server). For real multi-user, deploy a backend with WebSockets.</footer>
-  </main>
-
-  <script>
-    // optional: prevent going back to index when developing
-  </script>
+  <h1>Welcome to the Multiuser Guess Game</h1>
+  <div class="buttons">
+    <a href="admin.html"><button>Admin Login</button></a>
+    <a href="game.html"><button>Join Game</button></a>
+  </div>
 </body>
 </html>
