@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Guessing Game</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <div class="card admin-wrap">
+      <div class="admin-header">
+        <h2>Admin Dashboard</h2>
+        <div class="small muted">Username: <strong>admin</strong></div>
+      </div>
+
+      <form id="adminForm" class="form-grid">
+        <label>Admin Password (current)</label>
+        <input id="currentPass" type="password" placeholder="Enter admin password">
+
+        <label>New Admin Password</label>
+        <input id="newPass" type="password" placeholder="Set new password (optional)">
+
+        <label>Game Key</label>
+        <div class="row">
+          <input id="gameKey" type="text" readonly placeholder="Not generated">
+          <button id="genKey" class="btn">Generate</button>
+        </div>
+
+        <label>Max Players</label>
+        <input id="maxPlayers" type="number" min="1" max="100" value="5">
+
+        <label>Chances Per Player</label>
+        <input id="chancesPerPlayer" type="number" min="1" max="20" value="5">
+
+        <label>Players Joined</label>
+        <div id="joinedCount" class="muted">0</div>
+
+        <div class="fullrow">
+          <button id="applySettings" class="btn primary">Apply Settings</button>
+          <button id="startGame" class="btn ghost">Start Game</button>
+          <button id="stopGame" class="btn danger">Stop Game</button>
+        </div>
+      </form>
+
+      <section class="card small">
+        <h3>Lobby (players)</h3>
+        <div id="playerList" class="player-list"></div>
+      </section>
+
+      <section class="card small">
+        <h3>Leaderboard</h3>
+        <table class="table" id="leaderboard">
+          <thead><tr><th>Player</th><th>Wins</th><th>Avg Attempts</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="row top-gap">
+          <button id="resetLB" class="btn ghost">Reset Leaderboard</button>
+          <button id="clearLobby" class="btn ghost">Clear Lobby</button>
+        </div>
+      </section>
+
+      <div class="foot-actions">
+        <a href="index.html" class="muted">← Back to Home</a>
+      </div>
+    </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Admin page initialization & handlers
+    (function(){
+      const adminForm = document.getElementById('adminForm');
+      const genKey = document.getElementById('genKey');
+      const gameKey = document.getElementById('gameKey');
+      const maxPlayers = document.getElementById('maxPlayers');
+      const chancesPerPlayer = document.getElementById('chancesPerPlayer');
+      const applySettings = document.getElementById('applySettings');
+      const startGame = document.getElementById('startGame');
+      const stopGame = document.getElementById('stopGame');
+      const joinedCount = document.getElementById('joinedCount');
+      const playerList = document.getElementById('playerList');
+      const leaderboardTable = document.querySelector('#leaderboard tbody');
+      const resetLB = document.getElementById('resetLB');
+      const clearLobby = document.getElementById('clearLobby');
+      const currentPass = document.getElementById('currentPass');
+      const newPass = document.getElementById('newPass');
+
+      // load settings
+      function refreshUI(){
+        const s = GG.getSettings();
+        gameKey.value = s.gameKey || '';
+        maxPlayers.value = s.maxPlayers;
+        chancesPerPlayer.value = s.chancesPerPlayer;
+        joinedCount.textContent = GG.getPlayers().length;
+        // render players
+        playerList.innerHTML = '';
+        GG.getPlayers().forEach(p=>{
+          const el = document.createElement('div');
+          el.className = 'player-row';
+          el.innerHTML = `<div><strong>${p.name}</strong></div><div class="muted">Chances:${p.chancesLeft}</div>`;
+          playerList.appendChild(el);
+        });
+        // leaderboard
+        leaderboardTable.innerHTML = '';
+        const lb = GG.getLeaderboard();
+        Object.keys(lb).sort((a,b)=>lb[b].wins - lb[a].wins).forEach(name=>{
+          const r = lb[name];
+          const avg = (r.totalAttempts / Math.max(1, r.wins)).toFixed(1);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${name}</td><td>${r.wins}</td><td>${avg}</td>`;
+          leaderboardTable.appendChild(tr);
+        });
+      }
+
+      genKey.addEventListener('click', (e)=>{
+        e.preventDefault();
+        GG.generateKey();
+        refreshUI();
+      });
+
+      applySettings.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const sPass = localStorage.getItem('gg_admin_pass') || 'admin';
+        if(currentPass.value !== sPass && sPass !== 'admin') return alert('Enter current admin password to change settings');
+        const newP = newPass.value.trim();
+        if(newP) localStorage.setItem('gg_admin_pass', newP);
+        GG.updateSettings({maxPlayers: Number(maxPlayers.value)||5, chancesPerPlayer: Number(chancesPerPlayer.value)||5});
+        currentPass.value=''; newPass.value='';
+        refreshUI();
+        GG.notifyAdmin('settings_updated');
+      });
+
+      startGame.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const players = GG.getPlayers();
+        if(players.length < (Number(maxPlayers.value)||5)) {
+          if(!confirm('Not enough players joined. Start anyway?')) return;
+        }
+        GG.startGame();
+        refreshUI();
+      });
+
+      stopGame.addEventListener('click', (e)=>{
+        e.preventDefault();
+        if(confirm('Stop the entire game?')) {
+          GG.stopGame();
+          refreshUI();
+        }
+      });
+
+      resetLB.addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Reset leaderboard?')){ GG.resetLeaderboard(); refreshUI(); }});
+      clearLobby.addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear lobby?')) { GG.clearLobby(); refreshUI(); }});
+
+      // Listen to broadcast updates
+      GG.onSync(()=> refreshUI());
+
+      // initial
+      refreshUI();
+    })();
+  </script>
+</body>
+</html>
